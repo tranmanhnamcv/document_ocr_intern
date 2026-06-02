@@ -1,0 +1,39 @@
+services:
+  backend:
+    build: ./backend
+    container_name: ocr_backend
+    user: root   # dev only — WSL2 bind mount permission workaround, remove on Phase 5
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./backend:/app
+      - uploads_data:/uploads
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 9000 --reload
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: ocr_postgres
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  # redis: added in Phase 5 (Celery async workers)
+
+volumes:
+  postgres_data:
+  uploads_data:

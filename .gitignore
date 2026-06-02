@@ -1,0 +1,48 @@
+# =========================
+# Backend (FastAPI)
+# =========================
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/.venv/
+backend/venv/
+
+# Environment variables
+.env
+backend/.env
+
+# Uploaded files
+backend/uploads/
+
+# Python testing/cache
+.pytest_cache/
+.coverage
+.mypy_cache/
+
+# =========================
+# Docker volumes
+# =========================
+postgres_data/
+redis_data/
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Databases
+# =========================
+*.sqlite
+*.db
