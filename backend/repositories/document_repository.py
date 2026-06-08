@@ -1,9 +1,6 @@
-# backend/repositories/document_repository.py
 from __future__ import annotations
 
 import logging
-from typing import Optional
-
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -19,21 +16,18 @@ class DocumentRepository:
 
     # ── Read ──────────────────────────────────────────────────────────────────
 
-    def get_by_id(self, document_id: int) -> None|Document:
+    def get_by_id(self, document_id: int) -> Document | None:
         return self.db.query(Document).filter(Document.id == document_id).first()
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> list[Document]:
-        return (
-            self.db.query(Document)
-            .order_by(Document.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+    def get_all(self, skip: int = 0, limit: int = 100, user_id: int | None = None) -> list[Document]:
+        q = self.db.query(Document)
+        if user_id is not None:
+            q = q.filter(Document.user_id == user_id)
+        return q.order_by(Document.created_at.desc()).offset(skip).limit(limit).all()
 
     # ── Create ────────────────────────────────────────────────────────────────
 
-    def create(self, doc_data: DocumentCreate) -> Document:
+    def create(self, doc_data: DocumentCreate, user_id: int | None = None) -> Document:
         doc = Document(
             filename=doc_data.filename,
             original_filename=doc_data.original_filename,
@@ -42,6 +36,7 @@ class DocumentRepository:
             file_type=doc_data.file_type,
             mime_type=doc_data.mime_type,
             status="pending",
+            user_id=user_id,
         )
         self.db.add(doc)
         self.db.commit()
@@ -51,7 +46,7 @@ class DocumentRepository:
 
     # ── Status transitions ────────────────────────────────────────────────────
 
-    def set_processing(self, document_id: int) -> None|Document:
+    def set_processing(self, document_id: int) -> Document | None:
         return self._update_fields(document_id, status="processing")
 
     def set_completed(
@@ -60,48 +55,29 @@ class DocumentRepository:
         extracted_text: str,
         total_pages: int,
         average_confidence: float,
-    ) -> None|Document:
+    ) -> Document | None:
         doc = self.get_by_id(document_id)
         if not doc:
-            logger.warning(
-                "document_repository: set_completed — id=%d not found", document_id
-            )
+            logger.warning("document_repository: set_completed — id=%d not found", document_id)
             return None
 
         doc.status = "completed"
         doc.extracted_text = extracted_text
         doc.total_pages = total_pages
         doc.average_confidence = average_confidence
-
-        # Build search vector:
-        #   weight A → original_filename (higher relevance in ranking)
-        #   weight B → extracted_text
         doc.search_vector = func.setweight(
             func.to_tsvector("english", doc.original_filename), "A"
         ).op("||")(
-            func.setweight(
-                func.to_tsvector("english", extracted_text or ""), "B"
-            )
+            func.setweight(func.to_tsvector("english", extracted_text or ""), "B")
         )
 
         self.db.commit()
         self.db.refresh(doc)
-        logger.info(
-            "document_repository: set_completed id=%d pages=%d",
-            document_id, total_pages,
-        )
+        logger.info("document_repository: set_completed id=%d pages=%d", document_id, total_pages)
         return doc
 
-    def set_failed(
-        self,
-        document_id: int,
-        error_message: str,
-    ) -> None|Document:
-        return self._update_fields(
-            document_id,
-            status="failed",
-            error_message=error_message,
-        )
+    def set_failed(self, document_id: int, error_message: str) -> Document | None:
+        return self._update_fields(document_id, status="failed", error_message=error_message)
 
     # ── Delete ────────────────────────────────────────────────────────────────
 
@@ -116,10 +92,11 @@ class DocumentRepository:
 
     # ── Full-text search ──────────────────────────────────────────────────────
 
-    def search(self, query: str, skip: int = 0, limit: int = 20) -> list[dict]:
+    def search(
+        self, query: str, skip: int = 0, limit: int = 20, user_id: int | None = None
+    ) -> list[dict]:
         ts_query = func.plainto_tsquery("english", query)
-
-        results = (
+        q = (
             self.db.query(
                 Document,
                 func.ts_rank(Document.search_vector, ts_query).label("rank"),
@@ -132,40 +109,36 @@ class DocumentRepository:
             )
             .filter(Document.search_vector.op("@@")(ts_query))
             .filter(Document.status == "completed")
-            .order_by(func.ts_rank(Document.search_vector, ts_query).desc())
-            .offset(skip)
-            .limit(limit)
-            .all()
         )
+        if user_id is not None:
+            q = q.filter(Document.user_id == user_id)
+        results = q.order_by(func.ts_rank(Document.search_vector, ts_query).desc()).offset(skip).limit(limit).all()
         return [
             {"document": doc, "rank": float(rank), "headline": headline}
             for doc, rank, headline in results
         ]
 
-    def search_count(self, query: str) -> int:
+    def search_count(self, query: str, user_id: int | None = None) -> int:
         ts_query = func.plainto_tsquery("english", query)
-        return (
+        q = (
             self.db.query(func.count(Document.id))
             .filter(Document.search_vector.op("@@")(ts_query))
             .filter(Document.status == "completed")
-            .scalar()
         )
+        if user_id is not None:
+            q = q.filter(Document.user_id == user_id)
+        return q.scalar()
 
     # ── Internal ──────────────────────────────────────────────────────────────
 
-    def _update_fields(self, document_id: int, **kwargs) -> None | Document:
+    def _update_fields(self, document_id: int, **kwargs) -> Document | None:
         doc = self.get_by_id(document_id)
         if not doc:
-            logger.warning(
-                "document_repository: _update_fields — id=%d not found", document_id
-            )
+            logger.warning("document_repository: _update_fields — id=%d not found", document_id)
             return None
         for key, value in kwargs.items():
             setattr(doc, key, value)
         self.db.commit()
         self.db.refresh(doc)
-        logger.info(
-            "document_repository: updated id=%d fields=%s",
-            document_id, list(kwargs.keys()),
-        )
+        logger.info("document_repository: updated id=%d fields=%s", document_id, list(kwargs.keys()))
         return doc

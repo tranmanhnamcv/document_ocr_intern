@@ -9,14 +9,14 @@ class SearchService:
     def __init__(self, db: Session):
         self.repo = DocumentRepository(db)
 
-    def search(self, query: str, page: int = 1, limit: int = 20) -> SearchResponse:
+    def search(self, query: str, page: int = 1, limit: int = 20, user_id: int | None = None) -> SearchResponse:
         query = query.strip()
         if not query:
             return SearchResponse(query=query, total=0, results=[], page=page, limit=limit)
 
         skip = (page - 1) * limit
-        rows = self.repo.search(query, skip=skip, limit=limit)
-        total = self.repo.search_count(query)
+        rows = self.repo.search(query, skip=skip, limit=limit, user_id=user_id)
+        total = self.repo.search_count(query, user_id=user_id)
 
         results = [
             SearchResultItem(
