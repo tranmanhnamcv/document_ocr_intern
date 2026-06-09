@@ -12,7 +12,6 @@ A full-stack web application that extracts text from uploaded images and PDFs us
 - **Multi-page PDF support** — processes each page individually and stores per-page results
 - **User Authentication** — register and log in with JWT-based auth; documents are private to each user
 - **Quality-adaptive pipeline** — high-quality images use Otsu binarization; low-quality images go through deskew, denoising, and adaptive thresholding
-Note: the search feature is currently not available
 ---
 
 ## Tech Stack
