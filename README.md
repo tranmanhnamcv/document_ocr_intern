@@ -115,36 +115,76 @@ Interactive API docs available at **http://localhost:9000/docs**.
 ocr-document-search/
 ├── backend/
 │   ├── api/
-│   │   ├── dependencies.py       # get_current_user JWT dependency
+│   │   ├── __init__.py
+│   │   ├── dependencies.py               # get_current_user JWT dependency
 │   │   └── routes/
+│   │       ├── __init__.py
 │   │       ├── auth.py
 │   │       ├── documents.py
+│   │       ├── ocr.py
 │   │       └── search.py
 │   ├── core/
+│   │   ├── __init__.py
 │   │   ├── config.py
 │   │   ├── database.py
-│   │   └── security.py           # JWT + bcrypt helpers
-│   ├── models/                   # SQLAlchemy models
-│   ├── schemas/                  # Pydantic schemas
-│   ├── repositories/             # Database access layer
-│   ├── services/                 # Business logic layer
+│   │   └── security.py                   # JWT + bcrypt helpers
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── document.py
+│   │   ├── ocr_result.py
+│   │   └── user.py
+│   ├── repositories/
+│   │   ├── __init__.py
+│   │   ├── document_repository.py
+│   │   ├── ocr_result_repository.py
+│   │   └── user_repository.py
+│   ├── schemas/
+│   │   ├── __init__.py
+│   │   ├── document.py
+│   │   ├── ocr.py
+│   │   ├── ocr_result.py
+│   │   └── user.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── auth_service.py
+│   │   ├── document_service.py
+│   │   ├── ocr_service.py
+│   │   └── search_service.py
 │   ├── utils/
+│   │   ├── __init__.py
 │   │   ├── file_handler.py
-│   │   ├── image_processor.py    # Adaptive OCR preprocessing
+│   │   ├── image_processor.py            # Adaptive OCR preprocessing
 │   │   └── pdf_converter.py
+│   ├── uploads/
+│   │   └── .gitkeep
 │   ├── main.py
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/
 │   ├── app/
-│   │   ├── lib/auth.ts           # Token helpers + API calls
-│   │   ├── login/page.tsx
-│   │   ├── register/page.tsx
-│   │   ├── search/page.tsx
-│   │   └── page.tsx              # Upload page
-│   └── .env.local
+│   │   ├── lib/
+│   │   │   └── auth.ts                   # Token helpers + API calls
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── register/
+│   │   │   └── page.tsx
+│   │   ├── search/
+│   │   │   └── page.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx                      # Upload page / dashboard
+│   ├── public/
+│   ├── .env.local
+│   ├── eslint.config.mjs
+│   ├── next.config.ts
+│   ├── next-env.d.ts
+│   ├── package.json
+│   ├── postcss.config.mjs
+│   └── tsconfig.json
 ├── .env
-└── docker-compose.yml
+├── docker-compose.yml
+└── readme.md
 ```
 
 ---
