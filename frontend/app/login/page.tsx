@@ -1,99 +1,212 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { login, saveToken } from "../lib/auth";
+import Link from "next/link";
+import { login } from "../lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    setError(null);
     try {
-      const data = await login(email, password);
-      saveToken(data.access_token);
+      await login(email, password);
       router.push("/");
     } catch (err: any) {
-      setError(err.response?.data?.detail ?? "Login failed. Check your credentials.");
+      setError(err?.response?.data?.detail || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gray-950 text-gray-100 flex items-center justify-center p-8">
-      <div className="w-full max-w-sm space-y-6">
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#f7f7f7",
+      padding: "1.5rem",
+    }}>
+      <div style={{
+        width: "100%",
+        maxWidth: "400px",
+      }}>
+        {/* Wordmark */}
+        <p style={{
+          fontSize: "11px",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          color: "#aaa",
+          marginBottom: "8px",
+          fontWeight: 500,
+        }}>
+          Document OCR
+        </p>
 
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-          <p className="text-gray-400 mt-1 text-sm">Log in to your account</p>
-        </div>
+        <h1 style={{
+          fontSize: "22px",
+          fontWeight: 500,
+          color: "#111",
+          marginBottom: "2rem",
+          lineHeight: 1.2,
+        }}>
+          Sign in to your account
+        </h1>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm text-gray-400" htmlFor="email">Email</label>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+
+          {/* Email */}
+          <div>
+            <label style={{
+              display: "block",
+              fontSize: "13px",
+              color: "#555",
+              marginBottom: "6px",
+              fontWeight: 500,
+            }}>
+              Email
+            </label>
             <input
-              id="email"
               type="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm text-gray-400" htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors"
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                fontSize: "14px",
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                outline: "none",
+                backgroundColor: "#fff",
+                color: "#111",
+                boxSizing: "border-box",
+                transition: "border-color 0.15s",
+              }}
+              onFocus={(e) => (e.target.style.borderColor = "#111")}
+              onBlur={(e) => (e.target.style.borderColor = "#e0e0e0")}
             />
           </div>
 
-          {error && (
-            <div className="bg-red-950 border border-red-700 text-red-300 px-4 py-3 rounded-lg text-sm">
-              {error}
+          {/* Password */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <label style={{ fontSize: "13px", color: "#555", fontWeight: 500 }}>
+                Password
+              </label>
+              <Link href="/forgot-password" style={{ fontSize: "13px", color: "#555", textDecoration: "none" }}
+                onMouseOver={(e) => ((e.target as HTMLElement).style.color = "#111")}
+                onMouseOut={(e) => ((e.target as HTMLElement).style.color = "#555")}
+              >
+                Forgot password?
+              </Link>
             </div>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                style={{
+                  width: "100%",
+                  padding: "10px 40px 10px 12px",
+                  fontSize: "14px",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
+                  outline: "none",
+                  backgroundColor: "#fff",
+                  color: "#111",
+                  boxSizing: "border-box",
+                  transition: "border-color 0.15s",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "#111")}
+                onBlur={(e) => (e.target.style.borderColor = "#e0e0e0")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  color: "#aaa",
+                  fontSize: "13px",
+                  lineHeight: 1,
+                }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p style={{
+              fontSize: "13px",
+              color: "#c0392b",
+              margin: 0,
+              padding: "10px 12px",
+              backgroundColor: "#fdf0ef",
+              borderRadius: "6px",
+              border: "1px solid #f5c6c2",
+            }}>
+              {error}
+            </p>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg text-sm transition-colors"
+            style={{
+              width: "100%",
+              padding: "11px",
+              fontSize: "14px",
+              fontWeight: 500,
+              backgroundColor: loading ? "#888" : "#111",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              cursor: loading ? "not-allowed" : "pointer",
+              marginTop: "4px",
+              transition: "background-color 0.15s",
+              letterSpacing: "0.01em",
+            }}
           >
-            {loading ? "Logging in…" : "Log in"}
+            {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
         {/* Footer */}
-        <p className="text-sm text-gray-500 text-center">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-blue-400 hover:text-blue-300 transition-colors">
-            Register
+        <p style={{
+          textAlign: "center",
+          fontSize: "13px",
+          color: "#888",
+          marginTop: "1.5rem",
+        }}>
+          No account?{" "}
+          <Link href="/register" style={{ color: "#111", textDecoration: "none", fontWeight: 500 }}>
+            Create one
           </Link>
         </p>
-        <p className="text-sm text-gray-500 text-center">
-          <Link href="/" className="text-gray-600 hover:text-gray-400 transition-colors">
-            ← Back to home
-          </Link>
-        </p>
-
       </div>
-    </main>
+    </div>
   );
 }
