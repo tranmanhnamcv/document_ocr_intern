@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     SECRET_KEY: str = "change-this-in-production-use-secrets"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60*24*7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@postgres:5432/document_ocr"
 
