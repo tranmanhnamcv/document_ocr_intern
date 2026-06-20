@@ -9,6 +9,7 @@ export function saveToken(token: string) {
 }
 
 export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
@@ -36,4 +37,16 @@ export async function login(email: string, password: string) {
     password,
   });
   return data;
+}
+
+export async function logout() {
+  const token = getToken();
+  if (token) {
+    await axios.post(
+      `${API}/api/v1/auth/logout`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  }
+  removeToken();
 }

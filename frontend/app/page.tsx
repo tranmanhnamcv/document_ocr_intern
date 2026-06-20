@@ -1,6 +1,6 @@
 "use client";
 
-import { authHeaders } from "./lib/auth";  
+import { authHeaders, getToken, logout } from "./lib/auth";
 import { useState, useRef } from "react";
 import axios from "axios";
 import Link from "next/link";
@@ -85,18 +85,32 @@ export default function Home() {
             <p className="text-gray-400 mt-1">Upload images or PDFs to extract and search text</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-800 hover:text-white transition-colors"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/register"
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-500 transition-colors"
-            >
-              Register
-            </Link>
+            {getToken() ? (
+              <button
+                onClick={async () => {
+                  await logout();
+                  window.location.href = "/login";
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-800 hover:text-white transition-colors"
+              >
+                Log out
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-medium text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-800 hover:text-white transition-colors"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/register"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-500 transition-colors"
+                >
+                  Register
+                </Link>
+              </>
+            )}
             <Link
               href="/search"
               className="px-4 py-2 text-sm font-medium text-gray-300 border border-gray-700 rounded-lg hover:bg-gray-800 hover:text-white transition-colors"
