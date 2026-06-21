@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { register } from "../lib/auth";
+import { register, saveToken } from "../lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,7 +19,8 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      await register(fullName, email, password);
+      const data = await register(email, password, fullName);
+      saveToken(data.access_token);
       router.push("/");
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Could not create account. Please try again.");

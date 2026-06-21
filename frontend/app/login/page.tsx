@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { login } from "../lib/auth";
+import { login, saveToken } from "../lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,7 +18,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      const data = await login(email, password);
+      saveToken(data.access_token);
       router.push("/");
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Invalid email or password.");
