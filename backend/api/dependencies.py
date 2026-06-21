@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError
 from core.database import get_db
-from core.security import decode_token
+from core.security import decode_token, is_blacklisted
 from repositories.user_repository import UserRepository
 from models.user import User
 
