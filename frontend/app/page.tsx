@@ -1,7 +1,7 @@
 "use client";
 
 import { authHeaders, getToken, logout } from "./lib/auth";
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Link from "next/link";
 
@@ -26,7 +26,47 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // SSR-safe auth check
+  useEffect(() => {
+    setIsLoggedIn(!!getToken());
+  }, []);
+
+  // Poll while any document is pending/processing
+  useEffect(() => {
+    const hasPending = documents.some(
+      (d) => d.status === "pending" || d.status === "processing"
+    );
+
+    if (hasPending) {
+      pollingRef.current = setInterval(async () => {
+        try {
+          const { data } = await axios.get<Document[]>(
+            `${API}/api/v1/documents/`,
+            { headers: authHeaders() }
+          );
+          setDocuments(data);
+        } catch {
+          // silently ignore poll errors
+        }
+      }, 3000);
+    } else {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [documents]);
 
   const uploadFile = async (file: File) => {
     setUploading(true);
@@ -74,6 +114,11 @@ export default function Home() {
     }
   };
 
+  const statusLabel = (status: string) => {
+    if (status === "pending" || status === "processing") return "Extracting...";
+    return status;
+  };
+
   return (
     <main className="min-h-screen bg-gray-950 text-gray-100 p-8">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -85,7 +130,7 @@ export default function Home() {
             <p className="text-gray-400 mt-1">Upload images or PDFs to extract and search text</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {getToken() ? (
+            {isLoggedIn ? (
               <button
                 onClick={async () => {
                   await logout();
@@ -142,7 +187,7 @@ export default function Home() {
           />
           <div className="text-5xl mb-4">📄</div>
           {uploading ? (
-            <p className="text-blue-400 font-medium animate-pulse">Extracting text…</p>
+            <p className="text-blue-400 font-medium animate-pulse">Uploading…</p>
           ) : (
             <>
               <p className="text-gray-300 font-medium">Drop a file here or click to browse</p>
@@ -182,7 +227,10 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-xs px-2 py-1 rounded-full ${statusStyle(doc.status)}`}>
-                      {doc.status}
+                      {statusLabel(doc.status)}
+                      {(doc.status === "pending" || doc.status === "processing") && (
+                        <span className="ml-1 animate-pulse">●</span>
+                      )}
                     </span>
                     {doc.status === "completed" && (
                       <span className="text-gray-500 text-xs">
