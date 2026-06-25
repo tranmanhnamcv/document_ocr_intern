@@ -53,9 +53,9 @@ class ImageQualityReport:
 
 
 # ─── Module-level helper (used by the debug endpoint) ─────────────────────────
-def assess_quality(image: np.ndarray) -> ImageQualityReport:
+def assess_quality(image: np.ndarray, is_pdf: bool = False) -> ImageQualityReport:
     """Thin wrapper so callers don't need to instantiate ImageProcessor."""
-    return ImageProcessor()._assess(image)
+    return ImageProcessor()._assess(image, is_pdf=is_pdf)
 
 
 # ─── Main class ───────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ class ImageProcessor:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def preprocess(self, image: np.ndarray) -> Tuple[np.ndarray, ImageQualityReport]:
+    def preprocess(self, image: np.ndarray, is_pdf: bool = False) -> Tuple[np.ndarray, ImageQualityReport]:
         """
         Assess quality then route to the appropriate pipeline.
 
@@ -79,7 +79,7 @@ class ImageProcessor:
         quality   : ImageQualityReport
         """
         gray = self._to_gray(image)
-        quality = self._assess(image)
+        quality = self._assess(image, is_pdf=is_pdf)
 
         if quality.is_high_quality:
             logger.debug("image_processor: HIGH quality → Otsu pipeline")
@@ -94,7 +94,7 @@ class ImageProcessor:
 
     # ── Quality assessment ────────────────────────────────────────────────────
 
-    def _assess(self, image: np.ndarray) -> ImageQualityReport:
+    def _assess(self, image: np.ndarray, is_pdf: bool = False) -> ImageQualityReport:
         gray = self._to_gray(image)
 
         sharpness = float(cv2.Laplacian(gray, cv2.CV_64F).var())
@@ -115,7 +115,7 @@ class ImageProcessor:
             reasons.append(
                 f"too dark (brightness={brightness:.1f} < {BRIGHTNESS_MIN})"
             )
-        if brightness > BRIGHTNESS_MAX:
+        if not is_pdf and brightness > BRIGHTNESS_MAX:
             reasons.append(
                 f"overexposed (brightness={brightness:.1f} > {BRIGHTNESS_MAX})"
             )
