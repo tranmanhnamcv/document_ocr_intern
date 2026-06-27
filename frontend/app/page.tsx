@@ -32,8 +32,15 @@ export default function Home() {
 
   // SSR-safe auth check
   useEffect(() => {
-    setIsLoggedIn(!!getToken());
-  }, []);
+  const token = getToken();
+  setIsLoggedIn(!!token);
+  if (token) {
+    axios
+      .get<Document[]>(`${API}/api/v1/documents/`, { headers: authHeaders() })
+      .then(({ data }) => setDocuments(data))
+      .catch(() => {});
+  }
+}, []);
 
   // Poll while any document is pending/processing
   useEffect(() => {
@@ -208,7 +215,7 @@ export default function Home() {
         {/* Uploaded documents */}
         {documents.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-gray-300">Uploaded this session</h2>
+            <h2 className="text-lg font-semibold text-gray-300">Your Documents</h2>
             {documents.map((doc) => (
               <div key={doc.id} className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
 
