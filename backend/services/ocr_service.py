@@ -96,7 +96,7 @@ class OCRService:
 
         result = OCRResult()
         for i, image in enumerate(images, start=1):
-            processed, quality = self.processor.preprocess(image)
+            processed, quality = self.processor.preprocess(image, is_pdf=True)
             text, confidence = self._run_tesseract(processed, quality, page_num=i)
 
             page = PageResult(
