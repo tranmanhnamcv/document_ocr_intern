@@ -134,9 +134,17 @@ export default function SearchPage() {
                     · {new Date(doc.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <span className="shrink-0 text-xs bg-gray-800 text-gray-400 rounded px-2 py-1">
-                  score {rank.toFixed(3)}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/documents/${doc.id}`}
+                    className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white rounded px-2 py-1 transition"
+                  >
+                    View
+                  </Link>
+                  <span className="text-xs bg-gray-800 text-gray-400 rounded px-2 py-1">
+                    score {rank.toFixed(3)}
+                  </span>
+                </div>
               </div>
 
               {/* Headline snippet */}
