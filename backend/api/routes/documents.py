@@ -94,6 +94,8 @@ async def debug_quality(file: UploadFile = File(...)):
     DEV ONLY — assess image quality metrics without running full OCR.
     Accepts an image or PDF. For PDFs, only page 1 is assessed.
     """
+    import numpy as np
+
     content = await file.read()
     filename = (file.filename or "").lower()
 
@@ -103,13 +105,17 @@ async def debug_quality(file: UploadFile = File(...)):
             tmp_path = tmp.name
         try:
             converter = PDFConverter(dpi=150)
-            image = converter.get_first_page(tmp_path)
+            pages = converter.convert_file(tmp_path)
+            if not pages:
+                raise HTTPException(status_code=400, detail="PDF has no pages.")
+            image = pages[0]
+        except HTTPException:
+            raise
         except Exception as exc:
             raise HTTPException(status_code=400, detail=f"Could not read PDF: {exc}")
         finally:
             os.unlink(tmp_path)
     else:
-        import numpy as np
         buf = np.frombuffer(content, dtype=np.uint8)
         image = cv2.imdecode(buf, cv2.IMREAD_COLOR)
         if image is None:
@@ -118,5 +124,5 @@ async def debug_quality(file: UploadFile = File(...)):
                 detail="Could not decode image. Ensure it is a valid JPEG/PNG/TIFF/BMP/WEBP.",
             )
 
-    report = assess_quality(image)
+    report = assess_quality(image, is_pdf=filename.endswith(".pdf"))
     return report.as_dict()
