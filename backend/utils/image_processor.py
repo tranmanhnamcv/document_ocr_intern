@@ -32,10 +32,10 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 # ─── Quality thresholds ──────────────────────────────────────────────────────
-SHARPNESS_THRESHOLD: float = 80.0   # Laplacian variance
-CONTRAST_THRESHOLD: float = 30.0    # pixel std-dev
+SHARPNESS_THRESHOLD: float = 20.0   # Laplacian variance
+CONTRAST_THRESHOLD: float = 10.0    # pixel std-dev
 BRIGHTNESS_MIN: float = 40.0        # mean pixel – too dark
-BRIGHTNESS_MAX: float = 220.0       # mean pixel – overexposed
+BRIGHTNESS_MAX: float = 250.0       # mean pixel – overexposed
 
 
 # ─── Data classes ─────────────────────────────────────────────────────────────
