@@ -42,8 +42,8 @@ A full-stack web application that extracts text from uploaded images and PDFs us
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/ocr-document-search.git
-cd ocr-document-search
+git clone https://github.com/tranmanhnamcv/document_ocr_intern.git
+cd document_ocr_intern
 ```
 
 ### 2. Configure environment variables
