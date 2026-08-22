@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Tesseract config ─────────────────────────────────────────────────────────
 TESSERACT_CONFIG = "--oem 3 --psm 3"
-
+TESSERACT_LANG = "eng+vie"
 
 # ─── Result data classes ──────────────────────────────────────────────────────
 
@@ -137,13 +137,14 @@ class OCRService:
 
         # image_to_string for the text
         text: str = pytesseract.image_to_string(
-            image, config=TESSERACT_CONFIG
+            image, config=TESSERACT_CONFIG, lang=TESSERACT_LANG
         ).strip()
 
         # image_to_data for per-word confidence scores
         data = pytesseract.image_to_data(
             image,
             config=TESSERACT_CONFIG,
+            lang=TESSERACT_LANG,
             output_type=pytesseract.Output.DICT,
         )
 
