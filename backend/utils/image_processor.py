@@ -175,17 +175,22 @@ class ImageProcessor:
     @staticmethod
     def _deskew(gray: np.ndarray) -> np.ndarray:
         """Rotate image to correct skew using minAreaRect on dark pixel coords."""
-        coords = np.column_stack(np.where(gray < 128))
+        coords = np.column_stack(np.where(gray < 128))[:, ::-1]
         if len(coords) < 10:
             # Not enough dark pixels to estimate skew; return as-is
             return gray
 
         angle = cv2.minAreaRect(coords)[-1]
-        if angle < -45:
-            angle = -(90 + angle)
-        else:
-            angle = -angle
+        if angle > 45:
+            angle = angle -90
+        angle = -angle
 
+        if abs(angle) > 15:
+            # Implausibly large skew estimate — almost always an estimation
+            # error rather than a genuinely rotated page. Skip correction.
+            logger.debug("image_processor: skipping deskew, implausible angle %.2f°", angle)
+            return gray
+        
         if abs(angle) < 0.5:
             # Skew is negligible
             return gray
